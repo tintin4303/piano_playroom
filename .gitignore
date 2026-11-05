@@ -43,3 +43,6 @@ next-env.d.ts
 *.md
 
 !README.md
+
+src/lib/prisma.ts
+src/prisma/seed.ts

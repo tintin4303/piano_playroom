@@ -40,6 +40,7 @@ enum PaymentStatus {
 model User {
   id                   String        @id @default(uuid())
   email                String        @unique
+  passwordHash         String
   role                 Role          @default(PARENT)
   fullName             String?
   phone                String?

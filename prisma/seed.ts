@@ -3,65 +3,33 @@ dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 import { PrismaClient, Role } from '@prisma/client';
-import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding initial Piano Playroom database...');
+  console.log('Seeding initial Piano Playroom database with bcrypt hashed passwords...');
 
-  const adminEmail = process.env.INITIAL_ADMIN_EMAIL || 'admin@pianoplayroom.com';
+  const adminEmail = (process.env.INITIAL_ADMIN_EMAIL || 'admin@pianoplayroom.com').trim().toLowerCase();
   const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'AdminPiano2026!';
   const adminName = 'Head Administrator';
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Generate bcrypt salt and hash password
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(adminPassword, salt);
 
-  let supabaseUserId: string | undefined;
-
-  // If Supabase service role key is available, provision the admin in Supabase Auth
-  if (supabaseUrl && serviceRoleKey && !supabaseUrl.includes('placeholder')) {
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-
-    console.log(`Checking Supabase Auth for ${adminEmail}...`);
-    const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-
-    if (!listError) {
-      const existingAuthUser = usersData.users.find((u) => u.email === adminEmail);
-      if (existingAuthUser) {
-        supabaseUserId = existingAuthUser.id;
-        console.log(`Found existing Supabase Auth user: ${supabaseUserId}`);
-      } else {
-        const { data: createdUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email: adminEmail,
-          password: adminPassword,
-          email_confirm: true,
-          user_metadata: { role: Role.ADMIN, fullName: adminName },
-        });
-
-        if (createError) {
-          console.warn('Could not auto-create in Supabase Auth:', createError.message);
-        } else {
-          supabaseUserId = createdUser.user.id;
-          console.log(`Created Supabase Auth user: ${supabaseUserId}`);
-        }
-      }
-    }
-  }
-
-  // Upsert the Admin record in Prisma database
+  // Upsert Admin User in Prisma with passwordHash
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
       role: Role.ADMIN,
       fullName: adminName,
+      passwordHash: passwordHash,
     },
     create: {
-      ...(supabaseUserId ? { id: supabaseUserId } : {}),
       email: adminEmail,
       fullName: adminName,
+      passwordHash: passwordHash,
       role: Role.ADMIN,
       phone: '080-000-0000',
     },

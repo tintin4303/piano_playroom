@@ -1,18 +1,17 @@
 'use server';
 
-import { createClient as createServerSupabase } from '@/lib/supabase/server';
 import { createClient as createAdminSupabase } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 import { getCurrentUser } from './auth';
 import { revalidatePath } from 'next/cache';
+import bcrypt from 'bcryptjs';
 
-// Helper to get Supabase Admin client with service_role privilege
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey || supabaseUrl.includes('placeholder')) {
+  if (!supabaseUrl || !serviceRoleKey || supabaseUrl.includes('placeholder') || !serviceRoleKey.trim()) {
     return null;
   }
 
@@ -28,7 +27,6 @@ export interface ProvisionUserInput {
   lineId?: string;
   temporaryPassword?: string;
   role: Role;
-  // Optional child details when provisioning a Parent
   studentDetails?: {
     fullName: string;
     nickname: string;
@@ -45,7 +43,8 @@ export async function provisionAccount(input: ProvisionUserInput) {
     return { success: false, message: 'Unauthorized. Only school administrators can provision accounts.' };
   }
 
-  const { email, fullName, phone, lineId, role, temporaryPassword, studentDetails } = input;
+  const email = input.email.trim().toLowerCase();
+  const { fullName, phone, lineId, role, temporaryPassword, studentDetails } = input;
   const password = temporaryPassword || 'Piano123456!';
 
   // 2. Check if email already registered in Prisma
@@ -56,25 +55,31 @@ export async function provisionAccount(input: ProvisionUserInput) {
     return { success: false, message: `An account with email ${email} already exists.` };
   }
 
+  // 3. Hash temporary password with bcrypt
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(password, salt);
+
   let authUserId: string | undefined;
 
-  // 3. Create user in Supabase Auth via Admin Client (does not disturb admin session)
+  // 4. Optional Supabase Auth sync if service role key configured
   const supabaseAdmin = getSupabaseAdmin();
   if (supabaseAdmin) {
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { role, fullName, phone },
-    });
-
-    if (authError) {
-      return { success: false, message: `Supabase Auth error: ${authError.message}` };
+    try {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { role, fullName, phone },
+      });
+      if (!authError && authData?.user) {
+        authUserId = authData.user.id;
+      }
+    } catch (err) {
+      // Non-blocking if service key is invalid
     }
-    authUserId = authData.user.id;
   }
 
-  // 4. Create user and related profile records in Prisma
+  // 5. Create user and related profile records in Prisma
   try {
     const newUser = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -82,6 +87,7 @@ export async function provisionAccount(input: ProvisionUserInput) {
           ...(authUserId ? { id: authUserId } : {}),
           email,
           fullName,
+          passwordHash,
           phone,
           lineId,
           role,
@@ -129,7 +135,6 @@ export async function provisionAccount(input: ProvisionUserInput) {
 }
 
 export async function updateUserRole(targetUserId: string, newRole: Role) {
-  // Authorization: Only Admin can mutate roles
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== Role.ADMIN) {
     return { success: false, message: 'Unauthorized. Only administrators can change roles.' };
@@ -137,12 +142,11 @@ export async function updateUserRole(targetUserId: string, newRole: Role) {
 
   try {
     await prisma.$transaction(async (tx) => {
-      const user = await tx.user.update({
+      await tx.user.update({
         where: { id: targetUserId },
         data: { role: newRole },
       });
 
-      // If promoting to TEACHER, ensure Teacher record exists
       if (newRole === Role.TEACHER) {
         await tx.teacher.upsert({
           where: { userId: targetUserId },
@@ -155,7 +159,6 @@ export async function updateUserRole(targetUserId: string, newRole: Role) {
       }
     });
 
-    // Sync metadata to Supabase Auth if admin client is available
     const supabaseAdmin = getSupabaseAdmin();
     if (supabaseAdmin) {
       await supabaseAdmin.auth.admin.updateUserById(targetUserId, {

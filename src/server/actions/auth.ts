@@ -1,8 +1,9 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import bcrypt from 'bcryptjs';
+import { createSessionCookie, getSessionPayload, clearSessionCookie } from '@/lib/auth-session';
 
 export interface AuthResponse {
   success: boolean;
@@ -11,15 +12,13 @@ export interface AuthResponse {
 }
 
 export async function getCurrentUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user || !user.email) {
+  const session = await getSessionPayload();
+  if (!session || !session.userId) {
     return null;
   }
 
   const dbUser = await prisma.user.findUnique({
-    where: { email: user.email },
+    where: { id: session.userId },
     include: {
       teacher: true,
       students: true,
@@ -37,25 +36,32 @@ export async function signIn(formData: FormData): Promise<AuthResponse> {
     return { success: false, message: 'Please provide both email and password' };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return { success: false, message: error.message };
-  }
-
-  // Lookup user role in Prisma
-  const dbUser = await prisma.user.findUnique({
+  // Lookup user in Prisma database
+  const user = await prisma.user.findUnique({
     where: { email },
   });
 
+  if (!user || !user.passwordHash) {
+    return { success: false, message: 'Invalid email or password' };
+  }
+
+  // Compare submitted password with bcrypt passwordHash
+  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!isMatch) {
+    return { success: false, message: 'Invalid email or password' };
+  }
+
+  // Establish session cookie
+  await createSessionCookie({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
   let destination = '/parent';
-  if (dbUser?.role === 'ADMIN') {
+  if (user.role === 'ADMIN') {
     destination = '/admin';
-  } else if (dbUser?.role === 'TEACHER') {
+  } else if (user.role === 'TEACHER') {
     destination = '/teacher';
   }
 
@@ -63,7 +69,6 @@ export async function signIn(formData: FormData): Promise<AuthResponse> {
 }
 
 export async function signOutAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await clearSessionCookie();
   redirect('/login');
 }
