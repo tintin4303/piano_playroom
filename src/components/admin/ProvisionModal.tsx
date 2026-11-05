@@ -71,7 +71,7 @@ export default function ProvisionModal() {
           setStatusMessage(null);
           setIsOpen(true);
         }}
-        className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-bold rounded-full shadow-xs transition flex items-center gap-2 cursor-pointer"
+        className="px-4 py-2 bg-brand-yellow hover:bg-brand-yellow-hover text-brand-yellow-text text-xs font-bold rounded-full shadow-xs transition flex items-center gap-2 cursor-pointer"
       >
         <span>+ Provision Account</span>
       </button>
@@ -88,7 +88,7 @@ export default function ProvisionModal() {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-brand-text-subtle hover:text-brand-text-primary p-1 text-sm font-bold"
+                className="text-brand-text-subtle hover:text-brand-text-primary p-1 text-sm font-bold cursor-pointer"
               >
                 ✕
               </button>
@@ -107,7 +107,7 @@ export default function ProvisionModal() {
             )}
 
             <form onSubmit={handleProvision} className="space-y-4">
-              {/* Role Selector */}
+              {/* Role Selector with Uniform Yellow Brand Theme */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] uppercase tracking-wider font-bold text-brand-text-muted">
                   Account Role
@@ -120,11 +120,7 @@ export default function ProvisionModal() {
                       onClick={() => setRole(r)}
                       className={`py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         role === r
-                          ? r === 'PARENT'
-                            ? 'bg-brand-yellow text-brand-yellow-text shadow-xs'
-                            : r === 'TEACHER'
-                            ? 'bg-brand-primary text-white shadow-xs'
-                            : 'bg-brand-primary-dark text-white shadow-xs'
+                          ? 'bg-brand-yellow text-brand-yellow-text shadow-xs'
                           : 'text-brand-text-muted hover:text-brand-text-primary'
                       }`}
                     >
@@ -208,8 +204,8 @@ export default function ProvisionModal() {
 
               {/* Child / Student Registration Section for Parents */}
               {role === 'PARENT' && (
-                <div className="p-3.5 bg-brand-yellow-light/60 border border-brand-yellow-border rounded-xl space-y-3">
-                  <div className="text-xs font-bold text-brand-yellow-text uppercase tracking-wider">
+                <div className="pt-2 border-t border-brand-border space-y-3">
+                  <div className="text-[10px] font-bold text-brand-text-muted uppercase tracking-wider">
                     Linked Child (Student) Information
                   </div>
 
@@ -219,14 +215,14 @@ export default function ProvisionModal() {
                       placeholder="Student Full Name (e.g. Timmy Miller)"
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs text-brand-text-primary focus:outline-none"
+                      className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
                     />
                     <input
                       type="text"
                       placeholder="Nickname (e.g. Timmy)"
                       value={studentNickname}
                       onChange={(e) => setStudentNickname(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs text-brand-text-primary focus:outline-none"
+                      className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
                     />
                   </div>
 
@@ -235,12 +231,12 @@ export default function ProvisionModal() {
                       type="date"
                       value={studentDob}
                       onChange={(e) => setStudentDob(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs text-brand-text-primary focus:outline-none"
+                      className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
                     />
                     <select
                       value={studentGender}
                       onChange={(e) => setStudentGender(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-brand-surface border border-brand-border rounded-lg text-xs text-brand-text-primary focus:outline-none"
+                      className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -261,7 +257,7 @@ export default function ProvisionModal() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 bg-brand-primary hover:bg-brand-primary-hover disabled:opacity-50 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                  className="px-5 py-2 bg-brand-yellow hover:bg-brand-yellow-hover disabled:opacity-50 text-brand-yellow-text rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
                 >
                   {loading ? 'Provisioning...' : 'Provision Account'}
                 </button>

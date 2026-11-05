@@ -67,7 +67,7 @@ export default function UserManagementTable({ initialUsers }: { initialUsers: Ma
               onClick={() => setFilterRole(r)}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 filterRole === r
-                  ? 'bg-brand-surface text-brand-text-primary shadow-xs'
+                  ? 'bg-brand-yellow text-brand-yellow-text shadow-xs'
                   : 'text-brand-text-muted hover:text-brand-text-primary'
               }`}
             >
@@ -107,15 +107,7 @@ export default function UserManagementTable({ initialUsers }: { initialUsers: Ma
                   </td>
 
                   <td className="py-3 px-4">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        user.role === 'ADMIN'
-                          ? 'bg-brand-primary-dark text-white'
-                          : user.role === 'TEACHER'
-                          ? 'bg-brand-primary text-white'
-                          : 'bg-brand-yellow text-brand-yellow-text'
-                      }`}
-                    >
+                    <span className="text-xs font-semibold text-brand-text-primary">
                       {user.role}
                     </span>
                   </td>

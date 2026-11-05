@@ -129,7 +129,7 @@ export default async function ParentDashboardPage() {
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-slate-900">{formatTHB(inv.totalAmount)}</div>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                  <span className="text-xs font-semibold text-brand-text-muted">
                     {inv.status}
                   </span>
                 </div>

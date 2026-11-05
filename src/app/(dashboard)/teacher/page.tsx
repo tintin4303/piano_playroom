@@ -61,7 +61,7 @@ export default async function TeacherDashboardPage() {
                 </div>
 
                 <div>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                  <span className="text-xs font-semibold text-brand-text-primary">
                     {session.status}
                   </span>
                 </div>
