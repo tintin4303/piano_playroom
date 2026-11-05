@@ -14,7 +14,6 @@ const databaseUrl =
   process.env.DATABASE_URL ||
   'postgresql://postgres.hzwxpwxcrpgbzxmflwpb:!symphonysocool!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true';
 
-// Ensure process.env has it populated for Prisma engine validation
 if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = databaseUrl;
 }
@@ -27,7 +26,7 @@ export const prisma =
         url: databaseUrl,
       },
     },
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log: ['error'], // Disable query log spam to eliminate I/O overhead
   });
 
 if (process.env.NODE_ENV !== 'production') {

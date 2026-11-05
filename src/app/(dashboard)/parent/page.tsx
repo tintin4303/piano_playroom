@@ -6,8 +6,11 @@ import { formatTHB } from '@/lib/currency';
 export default async function ParentDashboardPage() {
   const user = await getCurrentUser();
 
-  if (!user || user.role !== 'PARENT') {
-    redirect('/');
+  if (!user) {
+    redirect('/login');
+  }
+  if (user.role !== 'PARENT') {
+    redirect(user.role === 'ADMIN' ? '/admin' : '/teacher');
   }
 
   // Fetch parent's registered children and invoices

@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { Role } from '@prisma/client';
 
 const SESSION_SECRET = new TextEncoder().encode(
   process.env.SESSION_SECRET || 'piano-playroom-super-secure-session-secret-key-2026'
@@ -9,7 +10,8 @@ const COOKIE_NAME = 'piano_session';
 export interface SessionPayload {
   userId: string;
   email: string;
-  role: string;
+  fullName?: string | null;
+  role: Role;
 }
 
 export async function createSessionCookie(payload: SessionPayload) {

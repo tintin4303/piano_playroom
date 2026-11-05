@@ -10,13 +10,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
-  // Protected route prefixes
-  const isProtected =
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/teacher') ||
-    pathname.startsWith('/parent');
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isTeacherRoute = pathname.startsWith('/teacher');
+  const isParentRoute = pathname.startsWith('/parent');
+  const isProtectedRoute = isAdminRoute || isTeacherRoute || isParentRoute;
 
-  if (isProtected) {
+  if (isProtectedRoute) {
     if (!token) {
       const loginUrl = new URL('/login', request.url);
       return NextResponse.redirect(loginUrl);
@@ -26,30 +25,38 @@ export async function middleware(request: NextRequest) {
       const { payload } = await jwtVerify(token, SESSION_SECRET);
       const role = payload.role as string;
 
-      // Role authorization guards
-      if (pathname.startsWith('/admin') && role !== 'ADMIN') {
-        return NextResponse.redirect(new URL(role === 'TEACHER' ? '/teacher' : '/parent', request.url));
+      // Strict role isolation: users can ONLY access their own assigned portal
+      if (isAdminRoute && role !== 'ADMIN') {
+        const target = role === 'TEACHER' ? '/teacher' : '/parent';
+        return NextResponse.redirect(new URL(target, request.url));
       }
-      if (pathname.startsWith('/teacher') && role !== 'TEACHER' && role !== 'ADMIN') {
-        return NextResponse.redirect(new URL('/parent', request.url));
+
+      if (isTeacherRoute && role !== 'TEACHER') {
+        const target = role === 'ADMIN' ? '/admin' : '/parent';
+        return NextResponse.redirect(new URL(target, request.url));
+      }
+
+      if (isParentRoute && role !== 'PARENT') {
+        const target = role === 'ADMIN' ? '/admin' : '/teacher';
+        return NextResponse.redirect(new URL(target, request.url));
       }
     } catch (err) {
-      // Invalid / expired token
+      // Session invalid or expired: clear cookie and route to login
       const response = NextResponse.redirect(new URL('/login', request.url));
       response.cookies.delete(COOKIE_NAME);
       return response;
     }
   }
 
-  // Redirect authenticated user away from /login
+  // Redirect authenticated user away from /login to their respective portal
   if (pathname === '/login' && token) {
     try {
       const { payload } = await jwtVerify(token, SESSION_SECRET);
       const role = payload.role as string;
-      const destination = role === 'ADMIN' ? '/admin' : role === 'TEACHER' ? '/teacher' : '/parent';
-      return NextResponse.redirect(new URL(destination, request.url));
+      const target = role === 'ADMIN' ? '/admin' : role === 'TEACHER' ? '/teacher' : '/parent';
+      return NextResponse.redirect(new URL(target, request.url));
     } catch {
-      // Token expired, allow /login
+      // Allow /login if token is malformed or expired
     }
   }
 

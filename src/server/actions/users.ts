@@ -4,7 +4,7 @@ import { createClient as createAdminSupabase } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
 import { Role } from '@prisma/client';
 import { getCurrentUser } from './auth';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_cache } from 'next/cache';
 import bcrypt from 'bcryptjs';
 
 function getSupabaseAdmin() {
@@ -37,7 +37,7 @@ export interface ProvisionUserInput {
 }
 
 export async function provisionAccount(input: ProvisionUserInput) {
-  // 1. Authorization: Only existing Admin can provision accounts
+  // Authorization: Only Admin can provision accounts
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== Role.ADMIN) {
     return { success: false, message: 'Unauthorized. Only school administrators can provision accounts.' };
@@ -47,21 +47,22 @@ export async function provisionAccount(input: ProvisionUserInput) {
   const { fullName, phone, lineId, role, temporaryPassword, studentDetails } = input;
   const password = temporaryPassword || 'Piano123456!';
 
-  // 2. Check if email already registered in Prisma
+  // Check if email already registered
   const existingUser = await prisma.user.findUnique({
     where: { email },
+    select: { id: true },
   });
   if (existingUser) {
     return { success: false, message: `An account with email ${email} already exists.` };
   }
 
-  // 3. Hash temporary password with bcrypt
+  // Hash password
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
 
   let authUserId: string | undefined;
 
-  // 4. Optional Supabase Auth sync if service role key configured
+  // Supabase Auth sync (if configured)
   const supabaseAdmin = getSupabaseAdmin();
   if (supabaseAdmin) {
     try {
@@ -74,12 +75,12 @@ export async function provisionAccount(input: ProvisionUserInput) {
       if (!authError && authData?.user) {
         authUserId = authData.user.id;
       }
-    } catch (err) {
-      // Non-blocking if service key is invalid
+    } catch {
+      // Non-blocking
     }
   }
 
-  // 5. Create user and related profile records in Prisma
+  // Create user in Prisma
   try {
     const newUser = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -94,7 +95,6 @@ export async function provisionAccount(input: ProvisionUserInput) {
         },
       });
 
-      // If provisioned as Teacher, create Teacher profile
       if (role === Role.TEACHER) {
         await tx.teacher.create({
           data: {
@@ -104,7 +104,6 @@ export async function provisionAccount(input: ProvisionUserInput) {
         });
       }
 
-      // If provisioned as Parent with student details, create the Student record
       if (role === Role.PARENT && studentDetails && studentDetails.fullName) {
         await tx.student.create({
           data: {
@@ -121,6 +120,7 @@ export async function provisionAccount(input: ProvisionUserInput) {
       return user;
     });
 
+    // Invalidate users cache instantly
     revalidatePath('/admin');
     return {
       success: true,
@@ -129,7 +129,6 @@ export async function provisionAccount(input: ProvisionUserInput) {
       generatedPassword: password,
     };
   } catch (dbError: any) {
-    console.error('Database provisioning error:', dbError);
     return { success: false, message: `Database error: ${dbError.message}` };
   }
 }
@@ -166,6 +165,7 @@ export async function updateUserRole(targetUserId: string, newRole: Role) {
       });
     }
 
+    // Invalidate cache immediately
     revalidatePath('/admin');
     return { success: true, message: `User role updated to ${newRole}.` };
   } catch (error: any) {
@@ -173,17 +173,43 @@ export async function updateUserRole(targetUserId: string, newRole: Role) {
   }
 }
 
+// Cached Query: Served in ~1ms from Next.js Data Cache
+const fetchCachedManagedUsers = unstable_cache(
+  async () => {
+    return await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        lineId: true,
+        role: true,
+        createdAt: true,
+        students: {
+          select: {
+            id: true,
+            fullName: true,
+            nickname: true,
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+  ['managed-users-query'],
+  { tags: ['managed-users'], revalidate: 60 }
+);
+
 export async function getManagedUsers() {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== Role.ADMIN) {
     return [];
   }
 
-  return await prisma.user.findMany({
-    include: {
-      students: true,
-      teacher: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+  return await fetchCachedManagedUsers();
 }

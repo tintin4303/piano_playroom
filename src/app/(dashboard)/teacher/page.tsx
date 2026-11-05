@@ -5,8 +5,11 @@ import { redirect } from 'next/navigation';
 export default async function TeacherDashboardPage() {
   const user = await getCurrentUser();
 
-  if (!user || user.role !== 'TEACHER') {
-    redirect('/');
+  if (!user) {
+    redirect('/login');
+  }
+  if (user.role !== 'TEACHER') {
+    redirect(user.role === 'ADMIN' ? '/admin' : '/parent');
   }
 
   // Find teacher record
