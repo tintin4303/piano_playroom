@@ -1,0 +1,223 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  PARENT
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED_EXCUSED
+  CANCELLED_LATE
+  TEACHER_ABSENT
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PENDING_REVIEW
+  PAID
+  VOID
+}
+
+enum PaymentStatus {
+  AUTO_VERIFIED
+  AMOUNT_MISMATCH
+  REJECTED
+  MANUAL_APPROVED
+}
+
+model User {
+  id                   String        @id @default(uuid())
+  email                String        @unique
+  role                 Role          @default(PARENT)
+  fullName             String?
+  phone                String?
+  lineId               String?
+  creditBalance        Int           @default(0) // Surplus in integer satang
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  students             Student[]     @relation("ParentStudents")
+  teacher              Teacher?
+  invoices             Invoice[]     @relation("ParentInvoices")
+  confirmedAttendances Attendance[]  @relation("ConfirmedByUser")
+}
+
+model Student {
+  id           String               @id @default(uuid())
+  parentId     String
+  parent       User                 @relation("ParentStudents", fields: [parentId], references: [id], onDelete: Cascade)
+  fullName     String
+  nickname     String
+  dateOfBirth  DateTime
+  gender       String
+  notes        String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  series       LessonSeries[]
+  sessions     LessonSession[]
+  invoiceItems InvoiceItem[]
+  performances RecitalPerformance[]
+}
+
+model Teacher {
+  id           String          @id @default(uuid())
+  userId       String          @unique
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio          String?
+  availability Json            // Weekly base availability windows
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  series       LessonSeries[]
+  sessions     LessonSession[]
+}
+
+// Recurring Rule / Schedule Template
+model LessonSeries {
+  id              String          @id @default(uuid())
+  studentId       String
+  student         Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId       String
+  teacher         Teacher         @relation(fields: [teacherId], references: [id])
+  dayOfWeek       Int             // 1 = Monday, 2 = Tuesday, ..., 7 = Sunday
+  startTime       String          // e.g. "16:00"
+  durationMinutes Int             @default(60) // 30 or 60
+  hourlyRate      Int             // Stored in satang (e.g. 120000 = 1,200 THB)
+  startDate       DateTime
+  endDate         DateTime?
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  sessions        LessonSession[]
+}
+
+// Concrete Calendar Occurrence
+model LessonSession {
+  id            String         @id @default(uuid())
+  seriesId      String?
+  series        LessonSeries?  @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  studentId     String
+  student       Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId     String
+  teacher       Teacher        @relation(fields: [teacherId], references: [id])
+  sessionDate   DateTime       // Calendar date (Bangkok timezone midnight)
+  startTime     DateTime
+  endTime       DateTime
+  rateSnapshot  Int            // Fixed fee in satang locked at creation time
+  status        SessionStatus  @default(SCHEDULED)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  attendance    Attendance?
+  invoiceItemId String?        @unique
+  invoiceItem   InvoiceItem?   @relation(fields: [invoiceItemId], references: [id], onDelete: SetNull)
+
+  @@index([studentId, status, invoiceItemId])
+  @@index([teacherId, sessionDate])
+}
+
+model Attendance {
+  id            String        @id @default(uuid())
+  sessionId     String        @unique
+  session       LessonSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  checkInTime   DateTime      @default(now())
+  confirmedById String
+  confirmedBy   User          @relation("ConfirmedByUser", fields: [confirmedById], references: [id])
+  notes         String?
+}
+
+// Household Invoice: One bill per parent across enrolled children
+model Invoice {
+  id            String        @id @default(uuid())
+  parentId      String
+  parent        User          @relation("ParentInvoices", fields: [parentId], references: [id])
+  invoiceNo     String        @unique // e.g. "INV-202611-0042"
+  billingMonth  String        // "YYYY-MM"
+  subtotal      Int           // in satang
+  creditApplied Int           @default(0) // in satang
+  totalAmount   Int           // in satang: subtotal - creditApplied
+  status        InvoiceStatus @default(ISSUED)
+  dueDate       DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         InvoiceItem[]
+  payment       Payment?
+}
+
+model InvoiceItem {
+  id          String         @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student        @relation(fields: [studentId], references: [id])
+  description String         // e.g. "Piano 60m - 12 Nov (Alex)"
+  amount      Int            // in satang
+  createdAt   DateTime       @default(now())
+
+  session     LessonSession?
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  invoiceId          String        @unique
+  invoice            Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  slipUrl            String        // Supabase Storage URL
+  transactionRef     String        @unique // SlipOK / ITMX switch hash preventing replay
+  detectedAmount     Int           // in satang
+  transferDate       DateTime
+  verificationStatus PaymentStatus @default(AUTO_VERIFIED)
+  rawSlipData        Json?         // Audit log of full SlipOK payload
+  createdAt          DateTime      @default(now())
+}
+
+model RecitalEvent {
+  id           String               @id @default(uuid())
+  title        String
+  eventDate    DateTime
+  venue        String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  performances RecitalPerformance[]
+}
+
+model RecitalPerformance {
+  id               String       @id @default(uuid())
+  eventId          String
+  event            RecitalEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  studentId        String
+  student          Student      @relation(fields: [studentId], references: [id])
+  teacherId        String?      // Accompanist teacher for collision sequencing
+  pieceTitle       String
+  composer         String?      // Optional: defaults to "Traditional" or "Arranged by Instructor"
+  performanceOrder Int
+  createdAt        DateTime     @default(now())
+
+  @@index([eventId, performanceOrder])
+}
+
+model SchoolSettings {
+  id                String   @id @default(uuid())
+  schoolName        String   @default("Piano Playroom")
+  bankName          String   @default("Kasikornbank")
+  bankAccountNumber String   @default("000-0-00000-0")
+  bankAccountName   String   @default("Piano Playroom Co., Ltd.")
+  promptPayId       String?
+  cancellationHours Int      @default(24) // Threshold between EXCUSED and LATE
+  updatedAt         DateTime @updatedAt
+}
