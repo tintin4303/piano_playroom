@@ -2,6 +2,7 @@ import { getCurrentUser, signOutAction } from '@/server/actions/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/shared/Logo';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default async function DashboardLayout({
   children,
@@ -16,9 +17,21 @@ export default async function DashboardLayout({
 
   const role = user.role;
 
+  // Admin portal has dedicated vertical sidebar layout as designed
+  if (role === 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-[#F8F9FD] flex">
+        <AdminSidebar userEmail={user.email} userName={user.fullName} />
+        <main className="flex-1 p-8 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-brand-canvas flex flex-col">
-      {/* Universal Top Navigation Header */}
+      {/* Universal Top Navigation Header for Teacher & Parent */}
       <header className="bg-brand-surface border-b border-brand-border sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <div className="flex items-center space-x-8">
@@ -26,34 +39,6 @@ export default async function DashboardLayout({
 
             {/* Navigation Pills */}
             <nav className="hidden md:flex items-center space-x-2">
-              {role === 'ADMIN' && (
-                <>
-                  <Link
-                    href="/admin"
-                    className="text-xs font-bold px-4 py-2 rounded-full bg-brand-yellow text-brand-yellow-text shadow-xs"
-                  >
-                    Overview
-                  </Link>
-                  <Link
-                    href="/admin"
-                    className="text-xs font-semibold px-4 py-2 rounded-full bg-brand-surface-muted text-brand-text-muted hover:text-brand-text-primary transition-colors"
-                  >
-                    Schedules &amp; Teachers
-                  </Link>
-                  <Link
-                    href="/admin"
-                    className="text-xs font-semibold px-4 py-2 rounded-full bg-brand-surface-muted text-brand-text-muted hover:text-brand-text-primary transition-colors"
-                  >
-                    Invoices &amp; Slips
-                  </Link>
-                  <Link
-                    href="/admin"
-                    className="text-xs font-semibold px-4 py-2 rounded-full bg-brand-surface-muted text-brand-text-muted hover:text-brand-text-primary transition-colors"
-                  >
-                    Recital Events
-                  </Link>
-                </>
-              )}
 
               {role === 'TEACHER' && (
                 <>

@@ -10,12 +10,10 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres.hzwxpwxcrpgbzxmflwpb:!symphonysocool!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true';
+const databaseUrl = process.env.DATABASE_URL;
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = databaseUrl;
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is not defined.');
 }
 
 export const prisma =

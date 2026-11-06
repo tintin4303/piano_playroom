@@ -38,9 +38,6 @@ export default function Logo({
           <span className={`font-black tracking-tight text-brand-text-primary ${dimensions.textClass}`}>
             Piano Playroom
           </span>
-          <span className={`font-semibold tracking-wider uppercase text-brand-text-muted mt-0.5 ${dimensions.subtextClass}`}>
-            Music School
-          </span>
         </div>
       )}
     </div>

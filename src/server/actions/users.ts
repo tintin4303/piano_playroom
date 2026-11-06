@@ -44,7 +44,19 @@ export async function provisionAccount(input: ProvisionUserInput) {
   }
 
   const email = input.email.trim().toLowerCase();
-  const { fullName, phone, lineId, role, temporaryPassword, studentDetails } = input;
+  const { fullName, lineId, role, temporaryPassword, studentDetails } = input;
+  const rawPhone = input.phone ? input.phone.trim() : '';
+
+  // Validate phone: must be numbers/hyphens only if provided, or required
+  if (!rawPhone) {
+    return { success: false, message: 'Phone number is required.' };
+  }
+  const digitsOnly = rawPhone.replace(/\D/g, '');
+  if (digitsOnly.length < 9 || digitsOnly.length > 10) {
+    return { success: false, message: 'Please enter a valid 9 or 10-digit phone number (numbers only).' };
+  }
+  const phone = rawPhone;
+
   const password = temporaryPassword || 'Piano123456!';
 
   // Check if email already registered

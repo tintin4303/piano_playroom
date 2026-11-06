@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { updateUserRole } from '@/server/actions/users';
 import { Role } from '@prisma/client';
+import CustomDropdown from '@/components/shared/CustomDropdown';
 
 interface ManagedUser {
   id: string;
@@ -134,16 +135,19 @@ export default function UserManagementTable({ initialUsers }: { initialUsers: Ma
                   </td>
 
                   <td className="py-3 px-4 text-right">
-                    <select
-                      value={user.role}
-                      disabled={loadingId === user.id}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
-                      className="px-2 py-1 bg-brand-canvas border border-brand-border rounded-lg text-xs font-semibold text-brand-text-primary focus:outline-none cursor-pointer"
-                    >
-                      <option value="PARENT">Parent</option>
-                      <option value="TEACHER">Teacher</option>
-                      <option value="ADMIN">Admin</option>
-                    </select>
+                    <div className="inline-block w-32">
+                      <CustomDropdown
+                        size="sm"
+                        value={user.role}
+                        disabled={loadingId === user.id}
+                        onChange={(val) => handleRoleChange(user.id, val as Role)}
+                        options={[
+                          { value: 'PARENT', label: 'Parent' },
+                          { value: 'TEACHER', label: 'Teacher' },
+                          { value: 'ADMIN', label: 'Admin' },
+                        ]}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))

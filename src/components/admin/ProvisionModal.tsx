@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { provisionAccount } from '@/server/actions/users';
 import { Role } from '@prisma/client';
+import { UserPlus, X } from 'lucide-react';
+import CustomDropdown from '@/components/shared/CustomDropdown';
 
 export default function ProvisionModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,7 +75,8 @@ export default function ProvisionModal() {
         }}
         className="px-4 py-2 bg-brand-yellow hover:bg-brand-yellow-hover text-brand-yellow-text text-xs font-bold rounded-full shadow-xs transition flex items-center gap-2 cursor-pointer"
       >
-        <span>+ Provision Account</span>
+        <UserPlus className="w-3.5 h-3.5" />
+        <span>Provision Account</span>
       </button>
 
       {isOpen && (
@@ -82,15 +85,13 @@ export default function ProvisionModal() {
             <div className="flex items-center justify-between border-b border-brand-border pb-3">
               <div>
                 <h3 className="text-lg font-bold text-brand-text-primary">Provision New Studio Account</h3>
-                <p className="text-xs text-brand-text-muted mt-0.5">
-                  Directly provision accounts for parents, teachers, and administrators.
-                </p>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-brand-text-subtle hover:text-brand-text-primary p-1 text-sm font-bold cursor-pointer"
+                className="text-brand-text-subtle hover:text-brand-text-primary p-1 rounded-lg hover:bg-brand-canvas transition cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -168,8 +169,15 @@ export default function ProvisionModal() {
                   </label>
                   <input
                     type="tel"
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9\-]*"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      // Filter out letters and non-numeric characters (allow digits and hyphens)
+                      const val = e.target.value.replace(/[^0-9\-]/g, '');
+                      setPhone(val);
+                    }}
                     placeholder="081-xxx-xxxx"
                     className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
                   />
@@ -226,22 +234,22 @@ export default function ProvisionModal() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-center">
                     <input
                       type="date"
                       value={studentDob}
                       onChange={(e) => setStudentDob(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
+                      className="w-full px-3 py-2.5 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary min-h-[42px]"
                     />
-                    <select
+                    <CustomDropdown
                       value={studentGender}
-                      onChange={(e) => setStudentGender(e.target.value)}
-                      className="w-full px-3 py-2 bg-brand-canvas border border-brand-border rounded-xl text-xs text-brand-text-primary focus:outline-none focus:border-brand-primary"
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
+                      onChange={(val) => setStudentGender(val)}
+                      options={[
+                        { value: 'Male', label: 'Male' },
+                        { value: 'Female', label: 'Female' },
+                        { value: 'Other', label: 'Other' },
+                      ]}
+                    />
                   </div>
                 </div>
               )}
