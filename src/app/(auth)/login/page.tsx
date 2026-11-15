@@ -53,7 +53,7 @@ export default function LoginPage() {
         </span>
       </div>
 
-      {/* Elegant Heading */}
+      {/* Heading */}
       <h1 className="font-serif text-3xl sm:text-4xl text-brand-text-primary tracking-tight mb-8 font-normal text-center">
         Welcome Back
       </h1>

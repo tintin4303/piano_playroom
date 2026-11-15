@@ -122,8 +122,6 @@ export default function UserManagementTable({ initialUsers }: { initialUsers: Ma
                           </div>
                         ))}
                       </div>
-                    ) : user.role === 'TEACHER' ? (
-                      <span className="text-[11px] text-brand-green font-semibold">Instructor Profile Active</span>
                     ) : (
                       <span className="text-[11px] text-brand-text-subtle">—</span>
                     )}

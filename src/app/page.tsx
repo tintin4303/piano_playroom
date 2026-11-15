@@ -54,18 +54,9 @@ export default async function HomePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-16 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary-light text-brand-primary rounded-full text-xs font-bold uppercase tracking-wider border border-brand-primary-border">
-          <span className="w-2 h-2 rounded-full bg-brand-primary" />
-          Senior Project 2 • Piano Playroom Management
-        </div>
-
         <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight text-brand-text-primary">
-          Smart Timetables, 1-Tap Attendance &amp; Bank Slip Verification
+          Music School Management System
         </h1>
-
-        <p className="text-base sm:text-lg text-brand-text-muted max-w-2xl mx-auto leading-relaxed">
-          The unified studio platform built for multi-teacher scheduling, post-paid invoicing, instant PromptPay slip validation, and bi-annual recital showcases.
-        </p>
 
         <div className="flex items-center justify-center pt-4">
           {user ? (

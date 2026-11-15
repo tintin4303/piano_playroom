@@ -355,26 +355,23 @@ export default function ScheduleView({ initialData, currentDateStr }: ScheduleVi
           </div>
 
           {/* Needs Attention Card */}
-          <div className="bg-[#FFF9E6] border border-[#FDE68A] rounded-2xl p-5 space-y-3">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-brand-yellow-text">
-              Needs attention
-            </div>
-            <div className="text-sm font-bold text-brand-yellow-text">
+          <div className="bg-brand-surface rounded-2xl border border-brand-border p-5 shadow-xs space-y-3">
+            <div className="text-sm font-bold text-brand-text-primary">
               {cancelledSessions.length} Cancelled Class{cancelledSessions.length === 1 ? '' : 'es'}
             </div>
 
             {cancelledSessions.length > 0 ? (
               cancelledSessions.map((cs) => (
                 <div key={cs.id} className="flex items-start gap-4 text-xs pt-1">
-                  <span className="font-bold text-brand-yellow-text">{cs.timeRange.split(' - ')[0]}</span>
+                  <span className="font-bold text-brand-text-primary">{cs.timeRange.split(' - ')[0]}</span>
                   <div>
-                    <div className="font-bold text-brand-yellow-text">{cs.studentName}</div>
-                    <div className="text-[11px] text-[#A17C00]">{cs.teacherName} {cs.type}</div>
+                    <div className="font-bold text-brand-text-primary">{cs.studentName}</div>
+                    <div className="text-[11px] text-brand-text-muted">{cs.teacherName} {cs.type}</div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-xs text-[#A17C00]">No cancellations pending review.</div>
+              <div className="text-xs text-brand-text-subtle">No cancellations pending review.</div>
             )}
 
             <button
@@ -383,10 +380,9 @@ export default function ScheduleView({ initialData, currentDateStr }: ScheduleVi
                 const cancelled = filteredSessions.find((s) => s.status === 'Cancelled');
                 if (cancelled) setEditingSession(cancelled);
               }}
-              className="w-full py-2.5 mt-2 bg-brand-yellow hover:bg-brand-yellow-hover text-brand-yellow-text text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              className="w-full py-2.5 mt-2 bg-brand-yellow hover:bg-brand-yellow-hover text-brand-yellow-text text-xs font-bold rounded-xl transition flex items-center justify-center cursor-pointer shadow-xs"
             >
-              <span>Check</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              Check
             </button>
           </div>
         </div>
