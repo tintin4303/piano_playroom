@@ -19,6 +19,9 @@ export interface ScheduleSessionDTO {
   startTimeIso: string;
   endTimeIso: string;
   sessionDateIso: string;
+  instrument: string; // "Piano", "Violin", etc.
+  startHourFraction: number; // e.g. 10.5 for 10:30
+  endHourFraction: number; // e.g. 11.5 for 11:30
 }
 
 export interface DayScheduleSummary {
@@ -151,11 +154,21 @@ const fetchCachedWeekSchedule = unstable_cache(
           else if (s.status.startsWith('CANCELLED')) statusDisplay = 'Cancelled';
           else if (s.status === 'TEACHER_ABSENT') statusDisplay = 'Absent';
 
+          const startFraction = start.getUTCHours() + start.getUTCMinutes() / 60;
+          const endFraction = end.getUTCHours() + end.getUTCMinutes() / 60;
+
+          // Default instrument logic (Violin for Beethoven, Piano for others for presentation)
+          const teacherName = s.teacher.user.fullName || 'Teacher';
+          let instrument = 'Piano';
+          if (teacherName.toLowerCase().includes('beethoven')) {
+            instrument = 'Violin';
+          }
+
           return {
             id: s.id,
             timeRange: `${startH}:${startM} - ${endH}:${endM}`,
             studentName: s.student.nickname || s.student.fullName,
-            teacherName: s.teacher.user.fullName || 'Teacher',
+            teacherName,
             teacherId: s.teacherId,
             studentId: s.studentId,
             type: durationMin >= 55 ? '1 hr' : '30 min',
@@ -165,6 +178,9 @@ const fetchCachedWeekSchedule = unstable_cache(
             startTimeIso: s.startTime.toISOString(),
             endTimeIso: s.endTime.toISOString(),
             sessionDateIso: s.sessionDate.toISOString(),
+            instrument,
+            startHourFraction: startFraction,
+            endHourFraction: endFraction,
           };
         });
 
@@ -219,15 +235,18 @@ export async function getScheduleWeek(selectedDateStr?: string) {
 }
 
 /**
- * Schedule a new lesson session
+ * Schedule a new lesson session or recurring series
  */
 export async function scheduleLessonSession(data: {
   studentId: string;
   teacherId: string;
   dateStr: string; // "YYYY-MM-DD"
   startTimeStr: string; // "13:00"
-  durationMinutes: number; // 30 or 60
+  endTimeStr?: string; // "14:00"
+  durationMinutes?: number;
   rateSatang?: number;
+  isRecurring?: boolean;
+  recurringEndDateStr?: string; // "YYYY-MM-DD"
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ADMIN') {
@@ -235,11 +254,69 @@ export async function scheduleLessonSession(data: {
   }
 
   try {
-    const [h, m] = data.startTimeStr.split(':').map(Number);
-    const sessionDate = new Date(`${data.dateStr}T00:00:00.000Z`);
-    const startTime = new Date(`${data.dateStr}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00.000Z`);
-    const endTime = new Date(startTime.getTime() + data.durationMinutes * 60000);
+    const [startH, startM] = data.startTimeStr.split(':').map(Number);
+    let durationMin = data.durationMinutes || 60;
 
+    if (data.endTimeStr) {
+      const [endH, endM] = data.endTimeStr.split(':').map(Number);
+      durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+      if (durationMin <= 0) durationMin = 60;
+    }
+
+    const sessionDate = new Date(`${data.dateStr}T00:00:00.000Z`);
+    const startTime = new Date(`${data.dateStr}T${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}:00.000Z`);
+    const endTime = new Date(startTime.getTime() + durationMin * 60000);
+
+    // If recurring is enabled, expand weekly occurrences up to the recurringEndDate
+    if (data.isRecurring && data.recurringEndDateStr) {
+      const recurrenceEnd = new Date(`${data.recurringEndDateStr}T23:59:59.999Z`);
+      let currentOccurrenceDate = new Date(sessionDate);
+
+      // Create recurring series rule
+      const dayOfWeekNum = currentOccurrenceDate.getUTCDay() === 0 ? 7 : currentOccurrenceDate.getUTCDay();
+      const series = await prisma.lessonSeries.create({
+        data: {
+          studentId: data.studentId,
+          teacherId: data.teacherId,
+          dayOfWeek: dayOfWeekNum,
+          startTime: data.startTimeStr,
+          durationMinutes: durationMin,
+          hourlyRate: data.rateSatang || 120000,
+          startDate: sessionDate,
+          endDate: recurrenceEnd,
+          isActive: true,
+        },
+      });
+
+      // Expand concrete session records
+      while (currentOccurrenceDate <= recurrenceEnd) {
+        const curDateStr = currentOccurrenceDate.toISOString().split('T')[0];
+        const occStart = new Date(`${curDateStr}T${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}:00.000Z`);
+        const occEnd = new Date(occStart.getTime() + durationMin * 60000);
+
+        await prisma.lessonSession.create({
+          data: {
+            seriesId: series.id,
+            studentId: data.studentId,
+            teacherId: data.teacherId,
+            sessionDate: new Date(`${curDateStr}T00:00:00.000Z`),
+            startTime: occStart,
+            endTime: occEnd,
+            rateSnapshot: data.rateSatang || 120000,
+            status: SessionStatus.SCHEDULED,
+          },
+        });
+
+        // Advance 7 days
+        currentOccurrenceDate.setUTCDate(currentOccurrenceDate.getUTCDate() + 7);
+      }
+
+      revalidatePath('/admin', 'layout');
+      revalidatePath('/admin/schedule');
+      return { success: true };
+    }
+
+    // Single session booking
     const session = await prisma.lessonSession.create({
       data: {
         studentId: data.studentId,
