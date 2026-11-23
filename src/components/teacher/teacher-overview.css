@@ -1,0 +1,19 @@
+.teacher-overview-link { display: inline-flex; padding: 11px 20px; background: #f4d868; border-radius: 99px; color: #182848; font-size: 12px; font-weight: 750; text-decoration: none; }
+.teacher-overview-link:hover { background: #e8c850; }
+.teacher-overview-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.teacher-overview-stats > div { padding: 22px; background: #fff; border: 1px solid #eaecef; border-radius: 16px; }
+.teacher-overview-stats span { display: block; font-size: 12px; color: #64748b; }
+.teacher-overview-stats strong { display: block; margin-top: 8px; font-size: 30px; color: #182848; }
+.teacher-overview-lessons > a { display: flex; align-items: center; gap: 24px; padding: 18px 0; border-top: 1px solid #eaecef; text-decoration: none; color: #182848; }
+.teacher-overview-lessons > a:hover { background: #f8f9fd; }
+.teacher-overview-time { font-weight: 750; color: #204cb4; font-size: 13px; font-variant-numeric: tabular-nums; }
+.teacher-overview-lessons > a > div { flex: 1; }
+.teacher-overview-lessons strong { display: block; font-size: 14px; }
+.teacher-overview-lessons div > span, .teacher-overview-status { display: block; color: #64748b; font-size: 12px; margin-top: 3px; }
+@media(max-width:640px) {
+  .teacher-overview-stats { gap: 8px; }
+  .teacher-overview-stats > div { padding: 14px 10px; }
+  .teacher-overview-stats span { font-size: 11px; }
+  .teacher-overview-lessons > a { flex-wrap: wrap; gap: 8px 16px; }
+  .teacher-overview-lessons > a > div { min-width: 100px; }
+}

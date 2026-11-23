@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/shared/Logo';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import TeacherNavbar from '@/components/teacher/TeacherNavbar';
+import TeacherMockProvider from '@/components/teacher/TeacherMockProvider';
+import { bangkokToday } from '@/lib/teacher-schedule-mock';
 
 export default async function DashboardLayout({
   children,
@@ -29,9 +32,24 @@ export default async function DashboardLayout({
     );
   }
 
+  if (role === 'TEACHER') {
+    return (
+      <TeacherMockProvider today={bangkokToday()}>
+        <div className="min-h-screen bg-brand-canvas flex flex-col">
+          <TeacherNavbar
+            teacherName={user.fullName || user.email}
+            logo={<Logo size="md" clickable={true} />}
+            accountActions={<form action={signOutAction}><button type="submit">Sign out</button></form>}
+          />
+          <main className="teacher-portal-main">{children}</main>
+        </div>
+      </TeacherMockProvider>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-brand-canvas flex flex-col">
-      {/* Universal Top Navigation Header for Teacher & Parent */}
+      {/* Parent Top Navigation Header */}
       <header className="bg-brand-surface border-b border-brand-border sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <div className="flex items-center space-x-8">
@@ -39,29 +57,6 @@ export default async function DashboardLayout({
 
             {/* Navigation Pills */}
             <nav className="hidden md:flex items-center space-x-2">
-
-              {role === 'TEACHER' && (
-                <>
-                  <Link
-                    href="/teacher"
-                    className="text-xs font-bold px-4 py-2 rounded-full bg-brand-yellow text-brand-yellow-text shadow-xs"
-                  >
-                    Schedule
-                  </Link>
-                  <Link
-                    href="/teacher"
-                    className="text-xs font-semibold px-4 py-2 rounded-full bg-brand-surface-muted text-brand-text-muted hover:text-brand-text-primary transition-colors"
-                  >
-                    Class History
-                  </Link>
-                  <Link
-                    href="/teacher"
-                    className="text-xs font-semibold px-4 py-2 rounded-full bg-brand-surface-muted text-brand-text-muted hover:text-brand-text-primary transition-colors"
-                  >
-                    My Students
-                  </Link>
-                </>
-              )}
 
               {role === 'PARENT' && (
                 <>

@@ -1,0 +1,117 @@
+.ts-schedule { color: #182848; --ts-border: #eaecef; --ts-blue: #204cb4; --ts-muted: #64748b; font-size: 14px; min-width: 0; }
+.ts-schedule * { box-sizing: border-box; }
+.ts-schedule button, .ts-schedule input { font: inherit; }
+.ts-schedule button { cursor: pointer; }
+.ts-schedule button:focus-visible, .ts-schedule input:focus-visible, .ts-schedule [tabindex]:focus-visible { outline: 2px solid #204cb4; outline-offset: 3px; }
+.ts-schedule h1, .ts-schedule h2, .ts-schedule p { margin: 0; }
+.ts-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
+.ts-heading h1 { font-size: 28px; font-weight: 900; letter-spacing: -.035em; }
+.ts-eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .14em; color: #64748b; }
+.ts-intro { color: #64748b; padding-top: 5px; font-size: 14px; }
+.ts-view-switch { display: flex; border: 1px solid var(--ts-border); border-radius: 99px; padding: 4px; background: white; }
+.ts-view-switch button { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 15px; border-radius: 99px; font-size: 12px; font-weight: 700; border: 0; background: transparent; color: #64748b; }
+.ts-view-switch [aria-pressed=true] { color: #725500; background: #f4d868; }
+.ts-toolbar-panel, .ts-calendar-panel, .ts-day-panel { border: 1px solid var(--ts-border); border-radius: 16px; background: white; box-shadow: 0 1px 3px #18284805; }
+.ts-toolbar-panel { padding: 20px; margin-bottom: 20px; }
+.ts-toolbar, .ts-date-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.ts-toolbar { justify-content: space-between; gap: 16px; }
+.ts-date-controls button { display: flex; justify-content: center; align-items: center; gap: 8px; height: 40px; border: 1px solid var(--ts-border); border-radius: 12px; background: white; color: #334155; }
+.ts-date-controls button:hover { background: #f8f9fd; border-color: #b6c6e8; }
+.ts-today { padding: 0 14px; font-size: 12px !important; font-weight: 700; }
+.ts-arrows { display: flex; gap: 5px; }
+.ts-arrows button { width: 38px; }
+.ts-date-range { padding: 0 12px; font-weight: 750; font-size: 14px !important; }
+.ts-date-range svg { color: #204cb4; }
+.ts-search { display: flex; align-items: center; gap: 8px; background: #f8f9fd; padding: 0 12px; height: 40px; border: 1px solid var(--ts-border); border-radius: 12px; color: #64748b; }
+.ts-search input { background: transparent; border: 0; width: 170px; min-width: 0; outline: none; color: #182848; font-size: 12px; }
+.ts-search:focus-within { outline: 2px solid #204cb4; outline-offset: 2px; }
+.ts-toolbar-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 14px; margin-top: 16px; border-top: 1px solid var(--ts-border); color: #64748b; font-size: 12px; }
+.ts-toolbar-bottom span:first-child { color: #334155; font-weight: 600; }
+.ts-calendar-panel { overflow: hidden; position: relative; }
+.ts-calendar-scroll { overflow: auto; max-height: 650px; }
+.ts-calendar-scroll:focus-visible { outline-offset: -3px; }
+.ts-calendar-grid { display: grid; grid-template-columns: 64px repeat(7, minmax(120px, 1fr)); min-width: 904px; }
+.ts-calendar-header { position: sticky; top: 0; z-index: 3; border-bottom: 1px solid var(--ts-border); background: #fbfcff; }
+.ts-time-heading { position: sticky; left: 0; z-index: 2; background: #fbfcff; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #64748b; font-weight: 700; letter-spacing: .08em; }
+.ts-day-header { border: 0; border-left: 1px solid var(--ts-border); background: transparent; padding: 12px 6px; color: #64748b; }
+.ts-day-header span { display: block; text-transform: uppercase; font-size: 10px; font-weight: 750; letter-spacing: .08em; }
+.ts-day-header strong { display: inline-flex; justify-content: center; align-items: center; width: 30px; height: 30px; margin-top: 3px; color: #182848; font-size: 18px; font-weight: 850; }
+.ts-day-header:hover { background: #ebf1ff; }
+.ts-day-header.ts-is-today { background: #fffbea; }
+.ts-is-today strong { border-radius: 50%; background: #f4d868; color: #725500; }
+.ts-is-selected:not(.ts-is-today) { box-shadow: inset 0 -2px #204cb4; }
+.ts-calendar-body { position: relative; }
+.ts-time-axis { position: sticky; left: 0; z-index: 2; background: white; }
+.ts-time-axis > div { height: 144px; text-align: right; padding: 8px 10px 0 2px; font-size: 11px; font-weight: 650; color: #64748b; border-bottom: 1px solid var(--ts-border); }
+.ts-day-column { position: relative; border-left: 1px solid var(--ts-border); }
+.ts-weekend { background: #fcfdff; }
+.ts-today-column { background: #fffdf4; }
+.ts-hour { height: 144px; border-bottom: 1px solid var(--ts-border); position: relative; }
+.ts-hour::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px dashed #eef0f4; }
+.ts-lesson { text-align: left; color: #182848; border: 1px solid #b4c6ee; border-left: 3px solid #204cb4; border-radius: 10px; background: #eef2fc; padding: 10px; display: flex; flex-direction: column; gap: 3px; line-height: 1.3; min-width: 0; }
+.ts-lesson:hover { box-shadow: 0 3px 10px #204cb421; border-color: #204cb4; }
+.ts-lesson strong { font-size: 13px; font-weight: 800; }
+.ts-lesson-time { font-size: 11px; font-weight: 750; color: #1b3f96; font-variant-numeric: tabular-nums; }
+.ts-lesson-instrument { color: #54647c; font-size: 11px; }
+.ts-lesson-status { font-size: 10px; font-weight: 700; }
+.ts-lesson-compact { position: absolute; left: 4px; right: 4px; overflow: hidden; justify-content: center; padding: 4px 7px; gap: 1px; line-height: 1.2; }
+.ts-lesson-compact strong, .ts-lesson-compact .ts-lesson-instrument { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ts-lesson-compact .ts-lesson-status { font-size: 10px; }
+.ts-status-attended { background: #e8f8f0; border-color: #b0d9c4; border-left-color: #0d8249; }
+.ts-status-attended .ts-lesson-time, .ts-status-attended .ts-lesson-status { color: #08683a; }
+.ts-status-cancelled, .ts-status-teacher-absent { background: #fff0f0; border-color: #edbcbc; border-left-color: #d93838; }
+.ts-status-cancelled .ts-lesson-time, .ts-status-cancelled .ts-lesson-status, .ts-status-teacher-absent .ts-lesson-time, .ts-status-teacher-absent .ts-lesson-status { color: #a22929; }
+.ts-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; color: #64748b; font-size: 11px; padding: 12px 2px; }
+.ts-scroll-hint { display: none; }
+.ts-empty { padding: 30px 16px; display: flex; flex-direction: column; align-items: center; gap: 7px; color: #64748b; text-align: center; }
+.ts-empty strong { color: #334155; }
+.ts-day-panel { padding: 20px; }
+.ts-day-tabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding-bottom: 16px; border-bottom: 1px solid var(--ts-border); }
+.ts-day-tabs button { border: 0; background: transparent; border-radius: 12px; padding: 10px 2px; color: #64748b; }
+.ts-day-tabs span { display: block; font-size: 11px; }
+.ts-day-tabs strong { display: block; font-size: 18px; margin-top: 3px; }
+.ts-day-tabs button:hover { background: #f8f9fd; }
+.ts-day-tabs [aria-pressed=true] { background: #f4d868; color: #725500; }
+.ts-day-list-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 18px 0; }
+.ts-day-list-heading h2 { font-size: 16px; font-weight: 750; }
+.ts-day-list-heading span { font-size: 12px; color: #64748b; }
+.ts-day-lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.ts-day-lessons .ts-lesson { gap: 6px; padding: 16px; }
+.ts-dialog { width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 40px); padding: 24px; border-radius: 20px; border: 1px solid #eaecef; background: white; color: #182848; box-shadow: 0 24px 70px #18284826; }
+.ts-dialog::backdrop { background: #14285470; }
+.ts-dialog h2 { font-size: 24px; font-weight: 850; letter-spacing: -.025em; }
+.ts-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.ts-dialog-heading button { border: 0; background: #f8f9fd; border-radius: 50%; width: 36px; height: 36px; display: grid; place-items: center; color: #64748b; }
+.ts-detail-date { margin-top: 5px !important; color: #64748b; }
+.ts-details { margin: 22px 0; }
+.ts-details > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #eaecef; padding: 12px 0; }
+.ts-details dt { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 13px; }
+.ts-details dd { margin: 0; text-align: right; font-size: 13px; font-weight: 700; }
+.ts-primary { background: #204cb4; color: white; border: 0; border-radius: 99px; padding: 11px 20px; font-weight: 700 !important; }
+.ts-primary:hover { background: #1b3f96; }
+.ts-close-details { width: 100%; }
+.ts-date-label { display: grid; gap: 8px; margin: 20px 0; color: #64748b; }
+.ts-date-label input { width: 100%; padding: 12px; border: 1px solid #d4e2fd; border-radius: 12px; color: #182848; background: white; }
+@media (max-width: 1020px) { .ts-scroll-hint { display: block; padding: 8px 16px; font-size: 11px; color: #64748b; border-bottom: 1px solid #eaecef; } }
+@media (max-width: 640px) {
+  .ts-heading h1 { font-size: 25px; }
+  .ts-heading { gap: 16px; }
+  .ts-view-switch { width: 100%; }
+  .ts-view-switch button { flex: 1; }
+  .ts-toolbar-panel { padding: 14px; }
+  .ts-toolbar, .ts-search { width: 100%; }
+  .ts-search input { width: 100%; }
+  .ts-date-controls { gap: 7px; }
+  .ts-date-range { padding: 0 8px; font-size: 12px !important; }
+  .ts-date-range svg { display: none; }
+  .ts-arrows { gap: 3px; }
+  .ts-arrows button { width: 32px; }
+  .ts-today { padding: 0 10px; }
+  .ts-calendar-scroll { max-height: 580px; }
+  .ts-day-panel { padding: 14px; }
+}
+
+.ts-status-student-absent { background: #fff0f0; border-color: #edbcbc; border-left-color: #d93838; }
+.ts-status-student-absent .ts-lesson-status { color: #a22929; }
+.ts-student-filter { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 16px; background: #ebf1ff; border-radius: 12px; font-size: 13px; }
+.ts-student-filter button { border: 0; background: none; color: #204cb4; font-weight: 700; text-decoration: underline; }

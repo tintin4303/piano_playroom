@@ -1,0 +1,33 @@
+.teacher-header { position: sticky; top: 0; z-index: 30; background: #fff; border-bottom: 1px solid #eaecef; }
+.teacher-header-inner { max-width: 1280px; margin: auto; padding: 18px 32px; display: flex; align-items: center; gap: 30px; }
+.teacher-header-brand { flex-shrink: 0; }
+.teacher-header-brand a { text-decoration: none; color: #182848; }
+.teacher-navigation { flex: 1; display: flex; align-items: stretch; gap: 12px; min-width: 0; }
+.teacher-navigation > a, .teacher-navigation > button { display: inline-flex; align-items: center; justify-content: center; flex: 1; gap: 6px; padding: 12px 14px; border-radius: 14px; border: 0; background: #f0f0f0; color: #64748b; font-size: 12px; font-weight: 700; line-height: 1.3; white-space: nowrap; text-decoration: none; font-family: inherit; }
+.teacher-navigation > a:hover { background: #ebf1ff; color: #204cb4; }
+.teacher-navigation > a[aria-current=page] { background: #f4d868; color: #182848; }
+.teacher-account { position: relative; flex-shrink: 0; }
+.teacher-account summary { list-style: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #204cb4; background: #ebf1ff; font-size: 12px; font-weight: 800; cursor: pointer; }
+.teacher-account summary::-webkit-details-marker { display: none; }
+.teacher-account-menu { position: absolute; right: 0; top: 48px; width: 210px; padding: 16px; border: 1px solid #eaecef; border-radius: 14px; box-shadow: 0 10px 30px #18284816; background: #fff; color: #182848; display: grid; gap: 6px; }
+.teacher-account-menu > span { font-size: 12px; color: #64748b; }
+.teacher-account-menu button { margin-top: 8px; padding: 8px 12px; background: #fff; border: 1px solid #eaecef; border-radius: 8px; font: inherit; font-size: 12px; cursor: pointer; }
+.teacher-header :focus-visible { outline: 2px solid #204cb4; outline-offset: 3px; }
+.teacher-portal-main { width: 100%; max-width: 1280px; margin: auto; padding: 32px; min-width: 0; }
+@media(max-width:1100px) {
+  .teacher-header-inner { gap: 20px; }
+  .teacher-navigation { gap: 6px; }
+  .teacher-navigation > a, .teacher-navigation > button { padding: 12px 10px; }
+}
+@media(max-width:800px) {
+  .teacher-header-inner { flex-wrap: wrap; padding: 14px 20px 12px; gap: 16px; }
+  .teacher-header-brand { flex: 1; }
+  .teacher-navigation { order: 3; flex-basis: 100%; overflow-x: auto; padding: 3px; margin: -3px; }
+  .teacher-navigation > a, .teacher-navigation > button { min-height: 40px; }
+  .teacher-portal-main { padding: 24px 20px; }
+}
+@media(max-width:480px) {
+  .teacher-header-inner { padding-inline: 14px; }
+  .teacher-navigation > a, .teacher-navigation > button { font-size: 11px; padding-inline: 10px; }
+  .teacher-portal-main { padding: 20px 14px; }
+}
