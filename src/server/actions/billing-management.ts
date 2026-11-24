@@ -6,6 +6,84 @@ import { revalidatePath } from 'next/cache';
 import { InvoiceStatus, PaymentStatus } from '@prisma/client';
 
 /**
+ * Generate an itemized student statement from selected sessions
+ */
+export interface CreateInvoiceSessionItem {
+  sessionId?: string;
+  description: string;
+  amount: number; // satang
+}
+
+export interface CreateStudentInvoiceParams {
+  studentId: string;
+  parentId: string;
+  billingMonth: string;
+  items: CreateInvoiceSessionItem[];
+}
+
+export async function createStudentInvoice(params: CreateStudentInvoiceParams) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'ADMIN') {
+    return { success: false, message: 'Unauthorized' };
+  }
+
+  try {
+    if (!params.items || params.items.length === 0) {
+      return { success: false, message: 'At least one session must be selected to generate an invoice.' };
+    }
+
+    const subtotal = params.items.reduce((sum, item) => sum + item.amount, 0);
+    const invNumber = `INV-${params.billingMonth.replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        parentId: params.parentId,
+        invoiceNo: invNumber,
+        billingMonth: params.billingMonth,
+        subtotal,
+        creditApplied: 0,
+        totalAmount: subtotal,
+        status: InvoiceStatus.ISSUED,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        items: {
+          create: params.items.map((it) => ({
+            studentId: params.studentId,
+            description: it.description,
+            amount: it.amount,
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    // Link real sessions if session IDs exist
+    for (let i = 0; i < params.items.length; i++) {
+      const it = params.items[i];
+      if (it.sessionId) {
+        const createdItem = invoice.items[i];
+        if (createdItem) {
+          try {
+            await prisma.lessonSession.update({
+              where: { id: it.sessionId },
+              data: { invoiceItemId: createdItem.id },
+            });
+          } catch {
+            // Ignore if mocked or already assigned
+          }
+        }
+      }
+    }
+
+    revalidatePath('/admin/billing');
+    return { success: true, invoiceNo: invoice.invoiceNo, totalAmount: subtotal };
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Failed to generate statement.' };
+  }
+}
+
+/**
  * Generate monthly batch invoices for all households with unbilled completed sessions
  */
 export async function generateMonthlyInvoices(billingMonth: string) {

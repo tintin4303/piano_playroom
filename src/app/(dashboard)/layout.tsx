@@ -2,7 +2,7 @@ import { getCurrentUser, signOutAction } from '@/server/actions/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/components/shared/Logo';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminLayoutClient from '@/components/admin/AdminLayoutClient';
 
 export default async function DashboardLayout({
   children,
@@ -17,15 +17,12 @@ export default async function DashboardLayout({
 
   const role = user.role;
 
-  // Admin portal has dedicated vertical sidebar layout as designed
+  // Admin portal with retractable sidebar and top-left burger menu
   if (role === 'ADMIN') {
     return (
-      <div className="min-h-screen bg-[#F8F9FD] flex">
-        <AdminSidebar userEmail={user.email} userName={user.fullName} />
-        <main className="flex-1 p-8 overflow-y-auto">
-          {children}
-        </main>
-      </div>
+      <AdminLayoutClient userEmail={user.email} userName={user.fullName}>
+        {children}
+      </AdminLayoutClient>
     );
   }
 
